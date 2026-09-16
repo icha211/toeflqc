@@ -8,16 +8,16 @@ export interface DashboardSummaryResponse {
     trialDays: number;
   };
   score: {
-    current: number;
-    target: number;
-    projected: number;
+    current: number | null;
+    target: number | null;
+    projected: number | null;
   };
-  accuracy: Record<ModuleName, number>;
+  accuracy: Record<ModuleName, number | null>;
   nextAction: {
-    module: ModuleName;
-    title: string;
-    questions: number;
-    minutes: number;
+    module: ModuleName | null;
+    title: string | null;
+    questions: number | null;
+    minutes: number | null;
   };
 }
 
@@ -28,7 +28,41 @@ export interface PracticeItemResponse {
   description: string;
   questions: number;
   minutes: number;
-  accuracy: number;
+  accuracy: number | null;
+}
+
+export interface PracticeQuestionResponse {
+  id: string;
+  prompt: string;
+  options: string[];
+  module: ModuleName;
+}
+
+export interface PracticeSetResponse {
+  id: string;
+  title: string;
+  module: ModuleName;
+  questions: PracticeQuestionResponse[];
+}
+
+export interface CreateProblemSetPayload {
+  title: string;
+  module: ModuleName;
+  description?: string;
+  questions: number;
+  minutes: number;
+}
+
+export interface SubmissionReviewResponse {
+  submissionId: string;
+  testId: string;
+  questions: Array<{
+    questionId: string;
+    prompt: string;
+    selectedOption: string | null;
+    correctOption: string | null;
+    explanation: string | null;
+  }>;
 }
 
 export interface SubmissionPayload {

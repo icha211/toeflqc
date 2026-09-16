@@ -17,7 +17,22 @@ export interface PracticeItem {
   description: string;
   questions: number;
   minutes: number;
-  accuracy: number;
+  accuracy: number | null;
+}
+
+export interface PracticeSet {
+  id: string;
+  title: string;
+  module: ModuleName;
+  questions: Array<Required<Pick<Question, 'id' | 'prompt' | 'options' | 'module'>>>;
+}
+
+export interface CreateProblemSetRequest {
+  title: string;
+  module: ModuleName;
+  description?: string;
+  questions: number;
+  minutes: number;
 }
 
 export interface DashboardSummary {
@@ -28,22 +43,34 @@ export interface DashboardSummary {
     trialDays: number;
   };
   score: {
-    current: number;
-    target: number;
-    projected: number;
+    current: number | null;
+    target: number | null;
+    projected: number | null;
   };
-  accuracy: Record<ModuleName, number>;
+  accuracy: Record<ModuleName, number | null>;
   nextAction: {
-    module: ModuleName;
-    title: string;
-    questions: number;
-    minutes: number;
+    module: ModuleName | null;
+    title: string | null;
+    questions: number | null;
+    minutes: number | null;
   };
 }
 
 export interface SubmissionRequest {
   testId: string;
   answers: Array<{ questionId: string; selectedOption: string }>;
+}
+
+export interface SubmissionReview {
+  submissionId: string;
+  testId: string;
+  questions: Array<{
+    questionId: string;
+    prompt: string;
+    selectedOption: string | null;
+    correctOption: string | null;
+    explanation: string | null;
+  }>;
 }
 
 export interface AiEvaluationResponse {

@@ -1,53 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, BarChart3, BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, Headphones, LayoutDashboard, LogOut, Menu, PenLine, Play, Settings, Sparkles, Target, X } from 'lucide-react';
+import './App.css';
+import { ArrowRight, BarChart3, Bell, BookOpen, CalendarDays, Check, ChevronLeft, ChevronRight, LayoutDashboard, LogIn, LogOut, Menu, PanelLeftClose, PanelLeftOpen, PenLine, Play, Settings, Sparkles, Target, X } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
+import { DashboardMetrics } from './components/dashboard/DashboardMetrics';
+import { SourceDashboardView } from './components/dashboard/SourceDashboardView';
+import { StudyPlan } from './components/dashboard/StudyPlan';
+import { PracticeSession } from './components/testing/PracticeSession';
+import { WorkspacePanels } from './components/workspace/WorkspacePanels';
+import { AuthModal } from './components/auth/AuthModal';
+import { useDashboardData } from './hooks/useDashboardData';
 import { api } from './services/api';
-import type { DashboardSummary, PracticeItem } from './types/test';
-
-const moduleMeta: Record<string, { icon: typeof Headphones; tone: string }> = {
-  listening: { icon: Headphones, tone: 'teal' },
-  structure: { icon: PenLine, tone: 'coral' },
-  reading: { icon: BookOpen, tone: 'blue' },
-  writing: { icon: PenLine, tone: 'amber' },
-};
+import type { PracticeItem } from './types/test';
 
 function App() {
+  const { user, isLoading: isAuthLoading, isDeveloper, configurationError, signInWithEmail, registerWithEmail, resetPassword, signInWithGoogle, refreshClaims, signOutUser } = useAuth();
 	const [activeNav, setActiveNav] = useState('Dashboard');
 	const [sidebarOpen, setSidebarOpen] = useState(false);
-	const [selectedDay, setSelectedDay] = useState(14);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(() => new Date().getDate());
 	const [toast, setToast] = useState('');
-	const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
-	const [practiceItems, setPracticeItems] = useState<PracticeItem[]>([]);
-	const [loading, setLoading] = useState(true);
-
-  	useEffect(() => {
-    let isMounted = true;
-
-    const loadData = async () => {
-      try {
-        const [dashboardResponse, practiceResponse] = await Promise.all([
-          api.dashboard(),
-          api.practice(),
-        ]);
-
-        if (!isMounted) return;
-        setDashboard(dashboardResponse);
-        setPracticeItems(practiceResponse.items ?? []);
-      } catch (error) {
-        console.error('Data load failed:', error);
-        setToast('Using local demo data while the API is unavailable.');
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const [accountBootstrapError, setAccountBootstrapError] = useState<string | null>(null);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [activePracticeItem, setActivePracticeItem] = useState<PracticeItem | null>(null);
+  const { dashboard, practiceItems, isLoading: loading, error: loadError, reload } = useDashboardData(user, isAuthLoading);
 
   useEffect(() => {
     if (!toast) return;
@@ -55,9 +30,28 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!user) return;
+    const authenticatedUser = user;
+
+    async function bootstrapAccount() {
+      try {
+        await api.bootstrapAccount(await authenticatedUser.getIdToken());
+        await refreshClaims();
+        setAccountBootstrapError(null);
+      } catch (bootstrapError) {
+        console.error('Account bootstrap failed:', bootstrapError);
+        setAccountBootstrapError('Developer activation needs Firebase Admin credentials in backend-functions/.env.');
+      }
+    }
+
+    void bootstrapAccount();
+  }, [refreshClaims, user]);
+
   const navigation = useMemo(
     () => [
       { label: 'Dashboard', icon: LayoutDashboard },
+      { label: 'Daily practice', icon: CalendarDays },
       { label: 'Mock tests', icon: Target },
       { label: 'Practice library', icon: BookOpen },
       { label: 'My progress', icon: BarChart3 },
@@ -65,34 +59,43 @@ function App() {
     [],
   );
 
-  const schedule = useMemo(() => {
-    if (!practiceItems.length) {
-      return [
-        { module: 'listening', title: 'Part 1: short conversations', detail: '20 questions · 18 min', progress: 62 },
-        { module: 'structure', title: 'Subject and verb agreement', detail: '20 questions · 15 min', progress: 70 },
-        { module: 'reading', title: 'Passage 02: ecology', detail: '10 questions · 22 min', progress: 76 },
-      ];
+  const projectedScore = dashboard?.score.projected ?? null;
+  const currentScore = dashboard?.score.current ?? null;
+  const targetScore = dashboard?.score.target ?? null;
+  const trialDay = dashboard?.user.trialDay ?? 0;
+  const trialDays = dashboard?.user.trialDays ?? 0;
+  const listeningAccuracy = dashboard?.accuracy.listening ?? null;
+  const readingAccuracy = dashboard?.accuracy.reading ?? null;
+  const displayName = dashboard?.user.displayName ?? user?.displayName ?? user?.email ?? 'Learner';
+  const userStateMessage = configurationError ?? loadError ?? (!user && !isAuthLoading ? 'Sign in to load your personal study plan.' : null);
+  const currentDate = new Date();
+  const currentDay = currentDate.getDate();
+  const daysInCurrentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const dateLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(currentDate);
+  const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate);
+
+  const handleAccountAction = async () => {
+    try {
+      if (user) {
+        await signOutUser();
+      } else {
+        setIsAccountModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Authentication action failed:', error);
+      setToast('Authentication could not be completed. Please try again.');
     }
-
-    return practiceItems.map((item) => ({
-      module: item.module,
-      title: item.title,
-      detail: `${item.questions} questions · ${item.minutes} min`,
-      progress: item.accuracy,
-    }));
-  }, [practiceItems]);
-
-  const projectedScore = dashboard?.score.projected ?? 583;
-  const currentScore = dashboard?.score.current ?? 583;
-  const trialDay = dashboard?.user.trialDay ?? 2;
-  const trialDays = dashboard?.user.trialDays ?? 4;
+  };
 
   return (
     <div className="app-shell">
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''} ${sidebarCollapsed ? 'sidebar--collapsed' : ''}`}>
         <div className="brand">
-          <span className="brand-mark">Q</span>
-          <span>Quick Check</span>
+          <img className="brand-mark" src="/login-logo-mark.png" alt="Quick Check" />
+          <img className="brand-wordmark" src="/login-logo-wordmark.png" alt="Quick Check" />
+          <button className="sidebar-collapse" aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}>
+            {sidebarCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
         </div>
 
         <div className="workspace-switcher">
@@ -121,6 +124,26 @@ function App() {
             </button>
           ))}
 
+          <p className="nav-label nav-label--spaced">Skills</p>
+          {[
+            { label: 'Listening', icon: Play },
+            { label: 'Structure', icon: Settings },
+            { label: 'Writing', icon: PenLine },
+            { label: 'Reading', icon: BookOpen },
+          ].map(({ label, icon: Icon }) => (
+            <button
+              className={`nav-item ${activeNav === label ? 'nav-item--active' : ''}`}
+              key={label}
+              onClick={() => {
+                setActiveNav(label);
+                setSidebarOpen(false);
+              }}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+
           <p className="nav-label nav-label--spaced">Manage</p>
           <button
             className={`nav-item ${activeNav === 'Developer' ? 'nav-item--active' : ''}`}
@@ -135,11 +158,11 @@ function App() {
           <div className="profile-row">
             <span className="profile-avatar">CU</span>
             <span>
-              <strong>{dashboard?.user.displayName ?? 'Culaccino_'}</strong>
-              <small>{dashboard?.user.plan === 'trial' ? 'Free trial' : 'Pro plan'}</small>
+              <strong>{displayName}</strong>
+              <small>{dashboard ? (dashboard.user.plan === 'trial' ? 'Free trial' : 'Pro plan') : user ? 'Signed in · profile syncing' : 'Not signed in'}</small>
             </span>
-            <button aria-label="Sign out" onClick={() => setToast('Sign out is connected to Firebase Auth in production.')}>
-              <LogOut size={16} />
+            <button aria-label={user ? 'Sign out' : 'Sign in'} onClick={handleAccountAction}>
+              {user ? <LogOut size={16} /> : <LogIn size={16} />}
             </button>
           </div>
         </div>
@@ -147,29 +170,65 @@ function App() {
 
       <main className="main-content">
         <header className="topbar">
-          <button className="icon-button menu-button" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}>
-            <Menu size={20} />
-          </button>
-
-          <div>
-            <span className="breadcrumb">Workspace / </span>
-            <strong>{activeNav}</strong>
+          <div className="topbar-brand">
+            <button className="icon-button menu-button" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}><Menu size={18} /></button>
           </div>
-
+          <nav className="topbar-switcher" aria-label="Workspace view">
+            <button className="topbar-switcher__active"><LayoutDashboard size={14} /> TOEFL ITP Dashboard</button>
+            <button onClick={() => setActiveNav('Practice library')}><BookOpen size={14} /> English Materials</button>
+          </nav>
           <div className="topbar-actions">
-            <button className="icon-button" aria-label="Open calendar" onClick={() => setToast('Your study calendar is up to date.')}>
-              <CalendarDays size={19} />
-            </button>
-            <button className="topbar-avatar" aria-label="Open profile">CU</button>
+            <button className="topbar-upgrade" onClick={() => setToast('Subscription upgrades will be connected to billing.')}>Upgrade</button>
+            <button className="topbar-action" aria-label="Settings"><Settings size={17} /></button>
+            <button className="topbar-action" aria-label="Notifications"><Bell size={17} /></button>
+            <button className="topbar-avatar" aria-label="Open profile">{displayName.slice(0, 2).toUpperCase()}</button>
           </div>
         </header>
 
         <div className="page-wrap">
+          {activeNav !== 'Dashboard' ? (
+            <WorkspacePanels
+              activeView={activeNav}
+              items={practiceItems}
+              canManageContent={isDeveloper}
+              onStart={(item) => {
+                if (!user) {
+                  setToast('Sign in before starting practice.');
+                  return;
+                }
+                setActivePracticeItem(item);
+              }}
+              onCreateProblemSet={async (payload) => {
+                if (!user) throw new Error('Authentication required');
+                await api.createProblemSet(await user.getIdToken(), payload);
+                reload();
+                setToast('Problem set published. Add questions in the next editor step.');
+              }}
+            />
+          ) : <>
+          {accountBootstrapError && <p className="data-state" role="alert">{accountBootstrapError}</p>}
+          <SourceDashboardView
+            dashboard={dashboard}
+            items={practiceItems}
+            displayName={displayName}
+            selectedDay={selectedDay}
+            currentDate={currentDate}
+            onSelectDay={setSelectedDay}
+            onStart={(item) => {
+              if (!user) {
+                setToast('Sign in before starting practice.');
+                return;
+              }
+              setActivePracticeItem(item);
+            }}
+            onShowGuide={() => setToast('TOEFL ITP has three sections, 140 questions, and a 115-minute total duration.')}
+          />
+          <div className="legacy-dashboard">
           <section className="page-heading">
             <div>
-              <p className="eyebrow">Tuesday, October 14, 2026</p>
+              <p className="eyebrow">{dateLabel}</p>
               <h1>
-                Good morning, {dashboard?.user.displayName ?? 'Culaccino'}
+                Good morning, {displayName}
                 <span>.</span>
               </h1>
               <p className="muted">Your next best step is ready. Keep the streak moving.</p>
@@ -180,6 +239,15 @@ function App() {
             </button>
           </section>
 
+          {userStateMessage && <p className="data-state" role="status">{userStateMessage}</p>}
+
+          {!user && !isAuthLoading && !configurationError && (
+            <button className="button button--dark sign-in-button" onClick={handleAccountAction}>
+              <LogIn size={16} />
+              Sign in with Google
+            </button>
+          )}
+
           <section className="hero-panel">
             <div className="hero-copy">
               <div className="sparkle">
@@ -187,8 +255,9 @@ function App() {
               </div>
               <p className="eyebrow">AI study signal</p>
               <h2>Build your score from the weakest link.</h2>
-              <p>
-                {dashboard?.nextAction.module ?? 'Listening'} is currently your highest-impact opportunity. Today’s plan is tuned to move accuracy from {dashboard?.accuracy.listening ?? 62}% toward 75%.
+              <p>{dashboard?.nextAction.module && listeningAccuracy !== null
+                ? `${dashboard.nextAction.module} is currently your highest-impact opportunity. Today’s plan is tuned to move accuracy from ${listeningAccuracy}% toward your target.`
+                : 'Complete your first diagnostic to generate a personal AI study plan.'}
               </p>
               <button className="text-button" onClick={() => setToast('Showing your diagnostic report.')}>
                 <span>View diagnostic report</span>
@@ -198,105 +267,40 @@ function App() {
 
             <div className="hero-score">
               <span>Projected score</span>
-              <strong>{projectedScore}</strong>
+              <strong>{projectedScore ?? '—'}</strong>
               <div className="score-line">
-                <span style={{ width: `${Math.min((projectedScore / (dashboard?.score.target ?? 677)) * 100, 100)}%` }} />
+                <span style={{ width: `${projectedScore !== null && targetScore !== null && targetScore > 0 ? Math.min((projectedScore / targetScore) * 100, 100) : 0}%` }} />
               </div>
-              <small>+42 points possible</small>
+              <small>{targetScore !== null ? `Target score: ${targetScore}` : 'Complete a mock test to set a projection'}</small>
             </div>
           </section>
 
-          <section className="stats-grid">
-            <article className="stat-card">
-              <div className="stat-icon stat-icon--teal">
-                <Target size={18} />
-              </div>
-              <span>Current estimate</span>
-              <strong>
-                {currentScore} <small>/ 677</small>
-              </strong>
-              <p>
-                <b className="positive">+12</b> since last test
-              </p>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon stat-icon--coral">
-                <CalendarDays size={18} />
-              </div>
-              <span>Trial progress</span>
-              <strong>
-                {trialDay} <small>/ {trialDays} days</small>
-              </strong>
-              <p>{trialDays - trialDay} days remaining</p>
-            </article>
-
-            <article className="stat-card">
-              <div className="stat-icon stat-icon--blue">
-                <BarChart3 size={18} />
-              </div>
-              <span>Weekly accuracy</span>
-              <strong>
-                {Math.round((dashboard?.accuracy.reading ?? 76) * 0.9)}<small>%</small>
-              </strong>
-              <p>
-                <b className="positive">+8%</b> this week
-              </p>
-            </article>
-          </section>
+          <DashboardMetrics
+            currentScore={currentScore}
+            targetScore={targetScore}
+            trialDay={trialDay}
+            trialDays={trialDays}
+            readingAccuracy={readingAccuracy}
+          />
 
           <div className="content-grid">
-            <section className="panel plan-panel">
-              <div className="panel-heading">
-                <div>
-                  <p className="eyebrow">Today’s plan</p>
-                  <h2>Small steps, measurable gains</h2>
-                </div>
-                <button className="icon-button" aria-label="Open plan settings" onClick={() => setToast('Plan settings are coming from your saved preferences.')}>
-                  <Settings size={18} />
-                </button>
-              </div>
-
-              <div className="task-list">
-                {schedule.map((task) => {
-                  const Icon = moduleMeta[task.module]?.icon ?? Headphones;
-                  const tone = moduleMeta[task.module]?.tone ?? 'teal';
-
-                  return (
-                    <article className="task-row" key={task.title}>
-                      <div className={`task-icon task-icon--${tone}`}>
-                        <Icon size={19} />
-                      </div>
-
-                      <div className="task-copy">
-                        <div>
-                          <strong>{task.title}</strong>
-                          <span className="task-module">{task.module}</span>
-                        </div>
-                        <p>{task.detail}</p>
-                        <div className="mini-progress">
-                          <span style={{ width: `${task.progress}%` }} />
-                        </div>
-                      </div>
-
-                      <button className="task-action" aria-label={`Start ${task.module} practice`} onClick={() => setToast(`Starting ${task.module} practice.`)}>
-                        <ArrowRight size={18} />
-                      </button>
-                    </article>
-                  );
-                })}
-              </div>
-
-              <button className="button button--outline full-width" onClick={() => setToast('All practice sets are ready in the library.')}>
-                <BookOpen size={16} />
-                Browse practice library
-              </button>
-            </section>
+            <StudyPlan
+              items={practiceItems}
+              onStart={(item) => {
+                if (!user) {
+                  setToast('Sign in before starting practice.');
+                  return;
+                }
+                setActivePracticeItem(item);
+              }}
+              onBrowse={() => setToast('All practice sets are ready in the library.')}
+              onSettings={() => setToast('Plan settings are coming from your saved preferences.')}
+            />
 
             <section className="panel calendar-panel">
               <div className="panel-heading">
                 <div>
-                  <p className="eyebrow">October 2026</p>
+                  <p className="eyebrow">{monthLabel}</p>
                   <h2>Study calendar</h2>
                 </div>
                 <div className="calendar-controls">
@@ -316,9 +320,9 @@ function App() {
               </div>
 
               <div className="calendar-grid">
-                {Array.from({ length: 31 }, (_, index) => {
+                {Array.from({ length: daysInCurrentMonth }, (_, index) => {
                   const day = index + 1;
-                  const status = day < 12 ? 'done' : day === 14 ? 'today' : day === 15 ? 'next' : '';
+                  const status = day === currentDay ? 'today' : '';
                   return (
                     <button
                       className={`day-cell ${status} ${selectedDay === day ? 'selected' : ''}`}
@@ -326,7 +330,6 @@ function App() {
                       onClick={() => setSelectedDay(day)}
                     >
                       {day}
-                      {status === 'done' && <Check size={11} />}
                     </button>
                   );
                 })}
@@ -334,7 +337,7 @@ function App() {
 
               <div className="calendar-note">
                 <span className="status-dot status-dot--teal" />
-                Day {selectedDay}: {selectedDay <= 12 ? 'completed' : selectedDay === 14 ? 'targeted practice' : 'available study day'}
+                {selectedDay === currentDay ? 'Today: choose a practice set to begin.' : `Day ${selectedDay}: available study day`}
               </div>
             </section>
           </div>
@@ -343,6 +346,8 @@ function App() {
             <span>Quick Check · TOEFL ITP progress workspace</span>
             <span>{loading ? 'Loading dashboard…' : 'Last synced just now'}</span>
           </footer>
+          </div>
+          </>}
         </div>
       </main>
 
@@ -356,6 +361,14 @@ function App() {
           </button>
         </div>
       )}
+      {activePracticeItem && user && <PracticeSession item={activePracticeItem} user={user} onClose={() => setActivePracticeItem(null)} />}
+      {isAccountModalOpen && <AuthModal
+        onClose={() => setIsAccountModalOpen(false)}
+        onLogin={signInWithEmail}
+        onRegister={registerWithEmail}
+        onGoogle={signInWithGoogle}
+        onResetPassword={resetPassword}
+      />}
     </div>
   );
 }
