@@ -1,0 +1,609 @@
+.monthPanel {
+  padding: 20px;
+  border: 1px solid #d1dce8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.calendarLayoutShell {
+  width: min(1114px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.calendarPeriod {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  padding: 0 4px;
+}
+
+.calendarPeriod button {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  width: max-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #7a8fa6;
+  font: 600 16px "Plus Jakarta Sans", sans-serif;
+  cursor: pointer;
+}
+
+.calendarPeriod button:last-child {
+  justify-self: end;
+}
+
+.calendarPeriod button :global(.ti) {
+  color: #c9d8e8;
+  font-size: 30px;
+}
+
+.calendarPeriodCurrent {
+  margin: 0;
+  background: linear-gradient(90deg, #005faa, #0d9488);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font: 800 24px "Plus Jakarta Sans", sans-serif;
+}
+
+.calendarMainLayout {
+  display: grid;
+  grid-template-columns: 229px minmax(0, 874px);
+  gap: 12px;
+  align-items: start;
+}
+
+.agendaPanel {
+  min-height: 662px;
+  padding: 7px 10px 20px;
+  display: grid;
+  align-content: start;
+  gap: 20px;
+  border-radius: 10px;
+  background: #e0f2fe;
+}
+
+.agendaPanel h3 {
+  margin: 0;
+  color: #7a8fa6;
+  font: 700 20px "Outfit", "Space Grotesk", sans-serif;
+  text-align: center;
+}
+
+.agendaList {
+  display: grid;
+  gap: 12px;
+}
+
+.agendaItem {
+  min-height: 89px;
+  padding: 10px 15px;
+  display: grid;
+  gap: 8px;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 2px 2px rgba(14, 165, 233, 0.25);
+}
+
+.agendaItem strong {
+  color: #000000;
+  font: 600 16px "Outfit", "Space Grotesk", sans-serif;
+}
+
+.agendaItemMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.agendaItemMain img {
+  width: 28px;
+  height: 28px;
+  padding: 5px;
+  border-radius: 50%;
+  background: #eff9ff;
+  object-fit: contain;
+}
+
+.agendaItemCopy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.agendaItemCopy span {
+  overflow: hidden;
+  color: #7a8fa6;
+  font: 400 14px "Outfit", "Space Grotesk", sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agendaItemCopy a {
+  width: 107px;
+  height: 19px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #005faa, #0d9488);
+  color: #ffffff;
+  font: italic 500 12px "Plus Jakarta Sans", "Space Grotesk", sans-serif;
+  text-decoration: none;
+}
+
+.agendaProgress {
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+  border-radius: 8px;
+  background: #182544;
+  color: #ffffff;
+}
+
+.agendaProgress h4 {
+  margin: 0;
+  color: #d1dce8;
+  font-size: 14px;
+}
+
+.agendaProgressScore {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.agendaProgressScore strong {
+  font: 600 40px "Outfit", sans-serif;
+}
+
+.agendaProgressScore span {
+  color: #7a8fa6;
+  font-size: 10px;
+}
+
+.agendaProgressBar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 32px;
+  background: #e0f2fe;
+}
+
+.agendaProgressBar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0ea5e9, #0d9488);
+}
+
+.agendaProgress small {
+  display: flex;
+  justify-content: space-between;
+}
+
+.dailyCalendarBlock {
+  container-type: inline-size;
+  --cell-w: 124px;
+  --icon-size: calc(var(--cell-w) * 0.2472);
+  --label-w: calc(var(--cell-w) * 0.4244);
+  min-height: 662px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.calendarHead {
+  height: 53px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.calendarDateRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.calendarDatePicker {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.calendarDateBadge {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 65px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d1dce8;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  background: #ffffff;
+}
+
+.calendarDateBadgeMonth {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  background: #f4f7fb;
+  color: #7a8fa6;
+  font-family: "Outfit", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.calendarDateBadgeDay {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  color: #000000;
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.calendarDateBadge:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+}
+
+.monthPickerPopover {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  z-index: 20;
+  width: min(474px, calc(100vw - 32px));
+  padding: 20px 25px;
+  display: none;
+  gap: 12px;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.15);
+}
+
+.monthPickerPopover.isOpen {
+  display: grid;
+}
+
+.monthPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.monthPickerYear {
+  margin: 0;
+  color: #0ea5e9;
+  font-family: "Plus Jakarta Sans", "Space Grotesk", sans-serif;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.monthPickerYearNav {
+  display: flex;
+  align-items: center;
+}
+
+.monthPickerYearNav button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #cbd8e6;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.monthPickerYearNav button:hover {
+  color: #0ea5e9;
+}
+
+.monthPickerYearNav :global(.ti) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd8e6;
+  font-family: "tabler-icons" !important;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.monthPickerYearNav button:hover :global(.ti) {
+  color: #0ea5e9;
+}
+
+.monthPickerLabel {
+  margin: 0;
+  color: #3a4a5c;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.monthPickerGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.monthPickerOption {
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 8px 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #d1dce8;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.monthPickerOption :global(.ti-chevron-right) {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: #000000;
+  font-family: "tabler-icons" !important;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.monthPickerOption:hover {
+  border-color: #8cc9ed;
+  transform: translateY(-1px);
+}
+
+.monthPickerOption.active {
+  border: 1px solid #d1dce8;
+  background: linear-gradient(105deg, rgba(14, 165, 233, 0.2), rgba(255, 255, 255, 0.2));
+}
+
+.calendarDateCopy {
+  display: grid;
+  gap: 0;
+}
+
+.calendarTitle {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #7a8fa6;
+}
+
+.calendarWeekdays {
+  height: 47px;
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell-w, 124px));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 15px 15px 0 0;
+  background: #ffffff;
+}
+
+.calendarWeekdays span {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: #11978d;
+  color: #ffffff;
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dashboardCalendarGrid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 124px);
+  grid-auto-rows: 92px;
+  gap: 0 1px;
+  padding: 0;
+  background: #d4f7e7;
+}
+
+.dashboardDay {
+  position: relative;
+  width: 124px;
+  min-width: 124px;
+  max-width: 124px;
+  height: 92px;
+  min-height: 92px;
+  max-height: 92px;
+  padding: 8px;
+  border: 1px solid #d1dce8;
+  border-radius: 15px;
+  background: #ffffff;
+  box-shadow: none;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.dashboardDay.muted {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.dashboardDay.selected {
+  background: #ffffff;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 2px rgba(14, 165, 233, 0.25);
+}
+
+.dashboardDay.mockTestDay {
+  border-color: transparent;
+  background: linear-gradient(129deg, #0d9488 8%, #b7dd18 100%);
+  box-shadow: inset 0 -4px 4px #005faa;
+}
+
+.dashboardDay.mockTestDay .dashboardDayNumber {
+  color: #ffffff;
+}
+
+.dashboardDay.mockTestDay .dashboardDayLabel.labelMock {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(9px, calc(var(--cell-w) * 0.05), 14px);
+  font-weight: 700;
+}
+
+.dashboardDay.mockTestDay .taskToken {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dashboardDay.mockTestDay .taskToken::after {
+  color: #ffffff;
+}
+
+.dashboardDayNumber {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: clamp(10px, calc(var(--cell-w, 124px) * 0.0664), 20px);
+  font-weight: 600;
+  color: #000000;
+}
+
+.dashboardDayLabel {
+  position: absolute;
+  top: calc(var(--cell-w, 124px) * 0.1624);
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--cell-w, 124px) * 0.022);
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(9px, calc(var(--cell-w, 124px) * 0.0517), 16px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dashboardDayLabel.labelMock {
+  background: linear-gradient(90deg, #005faa, #0d9488);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dashboardDayLabel.labelRecommended {
+  background: linear-gradient(90deg, #00aaff, #9000ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dashboardDayLabel.labelRecommended span {
+  display: none;
+}
+
+.dashboardDayLabel .labelSparkle {
+  flex: 0 0 auto;
+  width: clamp(10px, calc(var(--cell-w, 124px) * 0.059), 18px);
+  height: clamp(10px, calc(var(--cell-w, 124px) * 0.059), 18px);
+  color: #00aaff;
+}
+
+.taskQueue {
+  position: absolute;
+  top: calc(var(--cell-w, 124px) * 0.1624 + 24px);
+  left: 10px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 8px;
+  align-items: start;
+  margin: 0;
+  padding: 0;
+}
+
+.taskToken {
+  width: var(--icon-size, 30px);
+  height: var(--icon-size, 30px);
+  max-width: 100%;
+  justify-self: center;
+  border: 4px solid #e1f2fc;
+  border-radius: 50%;
+  font-size: 0;
+  background: #f8fbfe;
+  box-shadow: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.taskToken::after {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: max-content;
+  max-width: var(--label-w, 52px);
+  white-space: nowrap;
+  color: #000000;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: clamp(7px, calc(var(--cell-w, 124px) * 0.0443), 13px);
+  font-weight: 400;
+  transform: translateX(-50%);
+}
+
+.dashboardDay .taskToken::after {
+  display: none;
+}
+
+.taskToken img {
+  width: calc(var(--icon-size, 30px) * 0.522);
+  height: calc(var(--icon-size, 30px) * 0.522);
+  object-fit: contain;
+}
+
+.taskStatusBadge {
+  position: absolute;
+  top: calc(var(--icon-size, 30px) * 0.1642);
+  left: calc(var(--icon-size, 30px) * 0.8358);
+  width: calc(var(--icon-size, 30px) * 0.1493);
+  height: calc(var(--icon-size, 30px) * 0.1493);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.taskToken.done {
+  border-color: #b9ecd9;
+  background: #f3fffa;
+}
+
+.taskToken.done img {
+  filter: saturate(1.1);
+}
